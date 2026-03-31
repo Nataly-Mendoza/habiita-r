@@ -1,3 +1,37 @@
+OJITO
+# Habitta React
+
+## Setup
+
+npm install
+npm run dev
+
+## Estructura
+
+src/
+components/
+pages/
+layouts/
+services/
+hooks/
+context/
+mocks/
+types/
+utils/
+
+## Reglas
+
+- no modificar main
+- trabajar desde develop
+- 1 issue = 1 branch
+- usar mocks si no hay API
+
+## API
+
+VITE_API_URL=http://localhost:8000/api
+
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
