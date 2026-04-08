@@ -1,13 +1,20 @@
-import { useEffect } from "react";
-import { api } from "./services/api";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HomePage } from './pages/Inicio'; 
+import { Catalogo } from './pages/catalogo';
+import { DashboardOverviewPage } from './pages/dashboard';
 
 function App() {
-
-useEffect(() => {
-api.get("/ping").then(res => console.log(res.data));
-}, []);
-
-return <h1>Habitta</h1>;
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Página de inicio */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/catalogo" element={<Catalogo />} />
+        {/* Dashboard */}
+        <Route path="/dashboard/*" element={<DashboardOverviewPage />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
