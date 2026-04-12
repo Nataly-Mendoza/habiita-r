@@ -1,3 +1,4 @@
+//mocks/busqueda.mock.ts
 import type { Ubicacion } from '../types';
 import { listadoMock } from './propiedades.mock';
 
