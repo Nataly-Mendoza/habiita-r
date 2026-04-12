@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, MapPin, Trash2 } from "lucide-react";
 
-export const FiltrosBusqueda = () => {
+interface FiltrosBusquedaProps {
+  onFiltrar: (filtros: Record<string, string>) => void; // O el tipo que estés usando
+}
+
+export const FiltrosBusqueda = ({ onFiltrar}: FiltrosBusquedaProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   
@@ -20,6 +24,7 @@ export const FiltrosBusqueda = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFiltros(prev => ({ ...prev, [name]: value }));
+    onFiltrar({ [e.target.name]: e.target.value });
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -39,6 +44,7 @@ export const FiltrosBusqueda = () => {
       metros_max: "", recamaras: ""
     });
     setSearchParams({ operacion: "venta" });
+    onFiltrar({});
   };
 
   return (
@@ -48,7 +54,10 @@ export const FiltrosBusqueda = () => {
         {["venta", "renta"].map((op) => (
           <button 
             key={op} type="button"
-            onClick={() => setFiltros({...filtros, operacion: op})}
+            onClick={() => {
+              setFiltros({...filtros, operacion: op});
+              onFiltrar({ operacion: op });
+            }}
             style={{ 
               background: filtros.operacion === op ? "linear-gradient(135deg, #1B2B5E, #4A5FA8)" : "#F3F4F6",
               color: filtros.operacion === op ? "white" : "#8A92B2" 
@@ -64,8 +73,8 @@ export const FiltrosBusqueda = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Tipo */}
         <div className="bg-gray-50 p-3 rounded-2xl border border-gray-100">
-          <label className="text-[10px] font-bold text-gray-400 uppercase">Type</label>
-          <select name="tipo" value={filtros.tipo} onChange={handleChange} className="w-full bg-transparent text-sm font-semibold text-[#1B2B5E] outline-none">
+          <label htmlFor="tipo-select" className="text-[10px] font-bold text-gray-400 uppercase">Type</label>
+          <select id="tipo-select" name="tipo" value={filtros.tipo} onChange={handleChange} className="w-full bg-transparent text-sm font-semibold text-[#1B2B5E] outline-none">
             <option value="">All Types</option>
             <option value="casa">Casa</option>
             <option value="depto">Departamento</option>
@@ -144,3 +153,5 @@ export const FiltrosBusqueda = () => {
     </form>
   );
 };
+
+export default FiltrosBusqueda;

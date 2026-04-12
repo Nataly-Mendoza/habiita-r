@@ -94,7 +94,7 @@ export function DashboardOverviewPage() {
                             className="flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all hover:bg-[rgba(255,255,255,0.18)]"
                             >
                             <MessageSquare size={16} />
-                            Messages
+                            Mensajes
                             {totalNoLeidos > 0 && (
                                 <span style={{ background: "#C9A96E", color: "white", fontSize: "10px" }} className="w-5 h-5 rounded-full flex items-center justify-center">
                                     {totalNoLeidos}

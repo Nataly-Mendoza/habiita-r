@@ -97,3 +97,4 @@ export const Paginacion = ({ paginaActual, totalPaginas, onCambiar }: Paginacion
     </div>
   );
 };
+export default Paginacion;
