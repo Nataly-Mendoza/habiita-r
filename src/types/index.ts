@@ -1,4 +1,4 @@
-
+// Ubicación e inmuebles
 export interface Ubicacion {
     id: number;
     estado: string;
@@ -50,6 +50,7 @@ export interface EstadisticasDashboard {
   mensajes_nuevos: number;
 }
 
+// Mensajería y conversaciones
 export interface Mensaje {
   id: number;
   conversacion_id: number;
