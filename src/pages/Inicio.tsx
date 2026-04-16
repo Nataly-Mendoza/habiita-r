@@ -1,17 +1,26 @@
+//pages/Inicio.tsx
 import { useNavigate } from "react-router-dom";
 import {  ChevronRight, Star, TrendingUp, Shield, Headphones, ArrowRight } from "lucide-react";
 import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
 import { PropertyCard } from "../components/ui/PropertyCard";
 import { FiltrosBusqueda } from "../components/ui/filtrosBusqueda";
-import { listadoMock } from "../mocks/busqueda.mock";
+import { listadoMock } from "../mocks/propiedades.mock";
+
+import { mapToPropiedad } from "../components/adapters/property.adapter";
 
 
 export function HomePage() {
     const navigate = useNavigate();
   
     // Mostrar 3 propiedades destacadas de tus mocks
-    const featuredProperties = listadoMock.slice(0, 3);
+    const featuredProperties = listadoMock.data.slice(0, 3);
+
+    const handleFiltrar = (filtros: Record<string, string>) => {
+        // Handle filter logic here
+        console.log("Filtros aplicados:", filtros);
+    };
+
 
     return (
         <div style={{ backgroundColor: "#F8F4EE", minHeight: "100vh" }}>
@@ -46,13 +55,13 @@ export function HomePage() {
                         </h1>
                         
                         <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "18px", lineHeight: "1.7", maxWidth: "500px" }} className="mb-10">
-                            Discover {listadoMock.length}+ premium properties for sale and rent across France.
+                           Discover {listadoMock.data.length}+ premium properties
                         </p>
 
                         {/* Stats */}
                         <div className="flex items-center gap-8 mb-10">
                             {[
-                                { value: `${listadoMock.length * 10}+`, label: "Properties" },
+                                { value: `${listadoMock.data.length * 10}+`, label: "Properties" },
                                 { value: "8,500+", label: "Happy Clients" },
                                 { value: "98%", label: "Satisfaction" },
                             ].map((stat, i) => (
@@ -75,7 +84,7 @@ export function HomePage() {
                         }} 
                         className="p-6"
                     >
-                       <FiltrosBusqueda />
+                       <FiltrosBusqueda onFiltrar={handleFiltrar} />
                     </div>
                 </div>
             </section>
@@ -131,7 +140,7 @@ export function HomePage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {featuredProperties.map((p) => (
-                        <PropertyCard key={p.id} property={p} />
+                       <PropertyCard key={p.id} property={mapToPropiedad(p)} />
                         ))}
                     </div>
                 </div>

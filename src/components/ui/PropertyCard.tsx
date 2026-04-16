@@ -4,6 +4,7 @@ import { Bed, Bath, Maximize2, Heart, MapPin, Car, Leaf } from "lucide-react";
 import type { Propiedad } from "../../types";
 import { ubicacionesMock } from "../../mocks/busqueda.mock";
 
+
 interface PropertyCardProps {
   property: Propiedad;
   variant?: "grid" | "list";
@@ -25,7 +26,6 @@ export function PropertyCard({ property, variant = "grid" }: PropertyCardProps) 
         return `$${precio.toLocaleString()}`;
     };
 
-    {/* Variación las tarjetas, se pongan en forma de lista*/}
     if (variant === "list") {
         return (
             <Link to={`/property/${property.id}`} className="block">
