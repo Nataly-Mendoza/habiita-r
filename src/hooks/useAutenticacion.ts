@@ -1,5 +1,6 @@
 import { useContext } from "react";
-import { ContextoAutenticacion, ContextoAutenticacionType } from "../context/ContextoAutenticacion";
+import type { ContextoAutenticacionType } from "../context/ContextoAutenticacion";
+import { ContextoAutenticacion } from "../context/ContextoAutenticacion";
 
 export function useAutenticacion(): ContextoAutenticacionType {
   const contexto = useContext(ContextoAutenticacion);

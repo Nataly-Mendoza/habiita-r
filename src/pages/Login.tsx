@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { DatosLogin } from "../types/schemas";
+import { esquemaLogin } from "../types/schemas";
 import { Eye, EyeOff, Home, ArrowRight, Lock, Mail } from "lucide-react";
-import { esquemaLogin, DatosLogin } from "../types/schemas";
 import * as servicioAutenticacion from "../services/autenticacion";
 import { useAutenticacion } from "../hooks/useAutenticacion";
 
@@ -18,9 +19,9 @@ export function PaginaLogin() {
     register,
     handleSubmit,
     formState: { errors },
-    setError,
   } = useForm<DatosLogin>({
-    resolver: zodResolver(esquemaLogin),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(esquemaLogin) as any,
     mode: "onBlur",
   });
 
@@ -29,21 +30,18 @@ export function PaginaLogin() {
     setErrorGeneral("");
 
     try {
-      const respuesta = await servicioAutenticacion.iniciarSesion(datos);
+      const respuesta = await servicioAutenticacion.iniciarSesion({
+        email: datos.correo,
+        password: datos.contrasena,
+      });
       guardarSesion(respuesta.token, respuesta.usuario);
       navegar("/panel");
     } catch (error: any) {
-      if (error.errores?.correo) {
-        setError("correo", {
-          message: error.errores.correo[0],
-        });
-      } else if (error.errores?.contrasena) {
-        setError("contrasena", {
-          message: error.errores.contrasena[0],
-        });
-      } else {
-        setErrorGeneral(error.mensaje || "Error al iniciar sesión");
-      }
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.mensaje ||
+        "Credenciales inválidas.";
+      setErrorGeneral(msg);
     } finally {
       setCargando(false);
     }

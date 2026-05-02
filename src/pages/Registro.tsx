@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { DatosRegistro } from "../types/schemas";
+import { esquemaRegistro } from "../types/schemas";
 import {
   Eye,
   EyeOff,
@@ -13,7 +15,6 @@ import {
   Phone,
   Check,
 } from "lucide-react";
-import { esquemaRegistro, DatosRegistro } from "../types/schemas";
 import * as servicioAutenticacion from "../services/autenticacion";
 import { useAutenticacion } from "../hooks/useAutenticacion";
 
@@ -50,7 +51,8 @@ export function PaginaRegistro() {
     formState: { errors },
     setError,
   } = useForm<DatosRegistro>({
-    resolver: zodResolver(esquemaRegistro),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(esquemaRegistro) as any,
     mode: "onBlur",
   });
 
@@ -70,15 +72,6 @@ export function PaginaRegistro() {
       ? "#C9A96E"
       : "#2A7A4E";
 
-  const etiquetaFortaleza =
-    fortalezaContrasena === 0
-      ? ""
-      : fortalezaContrasena === 1
-      ? "Débil"
-      : fortalezaContrasena === 2
-      ? "Regular"
-      : "Fuerte";
-
   const alEnviar = async (datos: DatosRegistro) => {
     setCargando(true);
     setErrorGeneral("");
@@ -87,25 +80,22 @@ export function PaginaRegistro() {
       const respuesta = await servicioAutenticacion.registrar({
         nombre: datos.nombre,
         apellido: datos.apellido,
-        correo: datos.correo,
+        email: datos.correo,
         telefono: datos.telefono,
-        contrasena: datos.contrasena,
-        tipoUsuario: datos.tipoUsuario,
+        password: datos.contrasena,
+        password_confirmation: datos.confirmarContrasena,
       });
 
       guardarSesion(respuesta.token, respuesta.usuario);
       navegar("/panel");
     } catch (error: any) {
-      if (error.errores) {
-        Object.keys(error.errores).forEach((campo) => {
-          if (campo === "correo") {
-            setError("correo", {
-              message: error.errores[campo][0],
-            });
-          }
-        });
+      const apiErrors = error?.response?.data?.errors;
+      if (apiErrors?.email) {
+        setError("correo", { message: apiErrors.email[0] });
       } else {
-        setErrorGeneral(error.mensaje || "Error al registrarse");
+        setErrorGeneral(
+          error?.response?.data?.message || "Error al registrarse"
+        );
       }
     } finally {
       setCargando(false);

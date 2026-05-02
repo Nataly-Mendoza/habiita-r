@@ -1,22 +1,9 @@
-import { createContext, useEffect, useState, ReactNode } from "react";
-import * as servicioAutenticacion from "../services/autenticacion";
+import { createContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import type { Usuario } from "../services/autenticacion";
+import { cerrarSesion as apiCerrarSesion } from "../services/autenticacion";
 
-export interface Usuario {
-  id: number;
-  nombre: string;
-  apellido: string;
-  correo: string;
-  telefono?: string;
-  fotoPerfil?: string;
-  rol: {
-    id: number;
-    nombre: string;
-    descripcion: string;
-  };
-  notificaciones: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { Usuario };
 
 export interface ContextoAutenticacionType {
   usuario: Usuario | null;
@@ -38,27 +25,27 @@ export function ProveedorAutenticacion({ children }: { children: ReactNode }) {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Restaurar sesión desde localStorage al montar
   useEffect(() => {
-    const restaurarSesion = async () => {
-      try {
-        const tokenGuardado = localStorage.getItem("token");
-        const usuarioGuardado = localStorage.getItem("usuario");
-
-        if (tokenGuardado && usuarioGuardado) {
-          setToken(tokenGuardado);
-          setUsuario(JSON.parse(usuarioGuardado));
-        }
-      } catch (err) {
-        console.error("Error al restaurar sesión:", err);
-        localStorage.removeItem("token");
-        localStorage.removeItem("usuario");
-      } finally {
-        setCargando(false);
+    try {
+      const tokenGuardado = localStorage.getItem("token");
+      const usuarioGuardado = localStorage.getItem("usuario");
+      if (tokenGuardado && usuarioGuardado) {
+        setToken(tokenGuardado);
+        setUsuario(JSON.parse(usuarioGuardado));
       }
-    };
+    } catch {
+      localStorage.removeItem("token");
+      localStorage.removeItem("usuario");
+    } finally {
+      setCargando(false);
+    }
 
-    restaurarSesion();
+    const handleUnauthorized = () => {
+      setToken(null);
+      setUsuario(null);
+    };
+    window.addEventListener("unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("unauthorized", handleUnauthorized);
   }, []);
 
   const guardarSesion = (tokenNuevo: string, usuarioNuevo: Usuario) => {
@@ -70,11 +57,9 @@ export function ProveedorAutenticacion({ children }: { children: ReactNode }) {
 
   const cerrarSesion = async () => {
     try {
-      if (token) {
-        await servicioAutenticacion.cerrarSesion(token);
-      }
-    } catch (err) {
-      console.error("Error al cerrar sesión:", err);
+      await apiCerrarSesion();
+    } catch {
+      // intentional: clean up regardless
     } finally {
       setToken(null);
       setUsuario(null);
@@ -87,15 +72,7 @@ export function ProveedorAutenticacion({ children }: { children: ReactNode }) {
 
   return (
     <ContextoAutenticacion.Provider
-      value={{
-        usuario,
-        token,
-        cargando,
-        error,
-        guardarSesion,
-        cerrarSesion,
-        limpiarError,
-      }}
+      value={{ usuario, token, cargando, error, guardarSesion, cerrarSesion, limpiarError }}
     >
       {children}
     </ContextoAutenticacion.Provider>

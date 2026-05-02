@@ -1,79 +1,69 @@
 import { useState } from "react";
-//import { useNavigate } from "react-router-dom"; Se utilizara cuando la navegacion se implemente
-import { generarVisualizacion } from "../../services/ia";
+import { useNavigate } from "react-router-dom";
+import { amoblarConIA } from "../../services/ia";
 import { useAutenticacion } from "../../hooks/useAutenticacion";
 import { ModalIA } from "./ModalIA";
 
 interface Props {
-  fotoId: number;
-  propiedadId: number;
+  imageUrl: string;
   propiedadTipo: string;
 }
 
-export const BotonIA = ({ fotoId, propiedadId, propiedadTipo }: Props) => {
-  //const navigate = useNavigate(); Se utilizara cuando la navegacion se implemente
-  const { usuario, autenticado } = useAutenticacion();
+export function BotonIA({ imageUrl, propiedadTipo }: Props) {
+  const navigate = useNavigate();
+  const { usuario } = useAutenticacion();
+
   const [modalAbierto, setModalAbierto] = useState(false);
   const [cargando, setCargando] = useState(false);
-  const [urlResultado, setUrlResultado] = useState<string>();
+  const [original, setOriginal] = useState<string>();
+  const [generada, setGenerada] = useState<string>();
   const [error, setError] = useState<string>();
+  const [canRetry, setCanRetry] = useState(true);
 
-  const textoBoton = propiedadTipo === "terreno" ? "Ver construcción" : "Ver amueblado";
+  const ejecutar = async () => {
+    if (!usuario) { navigate("/login"); return; }
 
-  const manejarClick = async () => {
-    if (!usuario || !autenticado) {
-      // Redirigir hacia login o registro 
-      return;
-    }
-
-    setCargando(true);
-    setError(undefined);
     setModalAbierto(true);
+    setCargando(true);
+    setOriginal(imageUrl);
+    setGenerada(undefined);
+    setError(undefined);
 
     try {
-        const resultado = await generarVisualizacion(fotoId, propiedadId);
-        setUrlResultado(resultado.url_resultado);
-    } catch (err) {
-        console.error("Error al generar visualización:", err);
-        setError("Error al generar la visualización. Inténtalo de nuevo.");
+      const res = await amoblarConIA(imageUrl);
+      setGenerada(res.generated);
+    } catch (e: any) {
+      const msg: string = e.response?.data?.message ?? "Error al generar la imagen.";
+      setError(msg);
+      setCanRetry(e.response?.data?.retry ?? e.response?.status !== 422);
     } finally {
-        setCargando(false);
+      setCargando(false);
     }
   };
 
-  const reintentar = () => {
-    setError(undefined);
-    setUrlResultado(undefined);
-    manejarClick();
-  };
-
-  const cerrarModal = () => {
-    setModalAbierto(false);
-    setCargando(false);
-    setUrlResultado(undefined);
-    setError(undefined);
-  };
+  if (propiedadTipo === "land") return null;
 
   return (
     <>
       <button
-        onClick={manejarClick}
-        className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        onClick={ejecutar}
+        disabled={cargando}
+        className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow-md transition disabled:opacity-60"
+        style={{ background: "rgba(255,255,255,0.92)", color: "#1B2B5E" }}
       >
-        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-        </svg>
-        {autenticado ? textoBoton : "Ver con IA"}
+        ✨ Amueblar con IA
       </button>
 
       <ModalIA
         abierto={modalAbierto}
-        onCerrar={cerrarModal}
-        urlResultado={urlResultado}
+        onCerrar={() => { setModalAbierto(false); setCargando(false); }}
         cargando={cargando}
+        originalUrl={original}
+        generatedUrl={generada}
         error={error}
-        onReintentar={reintentar}
+        canRetry={canRetry}
+        onReintentar={ejecutar}
       />
     </>
   );
-};
+}

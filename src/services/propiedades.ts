@@ -1,31 +1,164 @@
+import { api } from "./api";
 
-import type { Property } from "../data/mockData";
-import {
-  propiedadMock,
-  listadoMock,
-  type ListadoPropiedades,
-} from "../mocks/propiedades.mock";
+// ─── API Types (match Laravel API response) ────────────────────────────────
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+export interface PropiedadImagen {
+  id: number;
+  url: string;
+  is_main: boolean;
+  order: number;
+}
 
-const USAR_MOCK = true; // ← cambiar a false cuando el API esté listo
-const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
+export interface PropietarioInfo {
+  id: number;
+  nombre: string;
+  apellido: string;
+  full_name: string;
+  email: string;
+  telefono: string | null;
+  foto_perfil: string | null;
+}
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+export interface Propiedad {
+  id: number;
+  title: string;
+  description: string | null;
+  type: "house" | "apartment" | "land" | "studio" | "commercial" | "office";
+  listing_type: "sale" | "rent";
+  price: number;
+  location: string;
+  city: string;
+  state: string | null;
+  country: string;
+  area: number;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  floor: number | null;
+  year_built: number | null;
+  status: "active" | "closed";
+  close_reason: string | null;
+  views_count: number;
+  has_water: boolean;
+  has_electricity: boolean;
+  has_drainage: boolean;
+  has_garage: boolean;
+  has_garden: boolean;
+  has_pool: boolean;
+  has_security: boolean;
+  has_gym: boolean;
+  has_elevator: boolean;
+  images: PropiedadImagen[];
+  main_image: string | null;
+  owner: PropietarioInfo | null;
+  is_favorited?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginacionMeta {
+  current_page: number;
+  last_page: number;
+  total: number;
+  per_page: number;
+  from: number | null;
+  to: number | null;
+}
+
+export interface ListadoPropiedades {
+  data: Propiedad[];
+  meta: PaginacionMeta;
+  links: object;
+}
 
 export interface FiltrosPropiedades {
-  type?: Property["type"];
-  listingType?: "sale" | "rent" | "all";
+  type?: string;
+  listing_type?: "sale" | "rent";
   city?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  bedrooms?: number | "any" | "4+";
-  minArea?: number;
-  hasGarden?: boolean;
-  hasGarage?: boolean;
-  hasPool?: boolean;
-  sortBy?: "newest" | "price-asc" | "price-desc" | "area-desc";
+  q?: string;
+  price_min?: number;
+  price_max?: number;
+  area_min?: number;
+  area_max?: number;
+  bedrooms?: number;
+  sort?: "newest" | "price_asc" | "price_desc" | "area_asc" | "area_desc";
+  per_page?: number;
   page?: number;
+}
+
+export interface DatosPropiedad {
+  title: string;
+  description?: string;
+  type: string;
+  listing_type: string;
+  price: number;
+  location: string;
+  city: string;
+  state?: string;
+  area: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  floor?: number;
+  year_built?: number;
+  has_water?: boolean;
+  has_electricity?: boolean;
+  has_drainage?: boolean;
+  has_garage?: boolean;
+  has_garden?: boolean;
+  has_pool?: boolean;
+  has_security?: boolean;
+  has_gym?: boolean;
+  has_elevator?: boolean;
+  images?: string[];
+}
+
+// ─── Funciones ────────────────────────────────────────────────────────────────
+
+export async function obtenerPropiedades(
+  filtros: FiltrosPropiedades = {}
+): Promise<ListadoPropiedades> {
+  const params = new URLSearchParams();
+  Object.entries(filtros).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") params.set(k, String(v));
+  });
+  const res = await api.get<ListadoPropiedades>(`/properties?${params}`);
+  return res.data;
+}
+
+export async function obtenerPropiedad(id: number): Promise<Propiedad> {
+  const res = await api.get<{ data: Propiedad }>(`/properties/${id}`);
+  return res.data.data;
+}
+
+export async function obtenerPropiedadesSimilares(id: number): Promise<Propiedad[]> {
+  const res = await api.get<{ data: Propiedad[] }>(`/properties/${id}/similar`);
+  return res.data.data;
+}
+
+export async function obtenerCiudades(): Promise<{ city: string; count: number }[]> {
+  const res = await api.get("/properties/cities");
+  return res.data;
+}
+
+export async function obtenerCantidadPorTipo(): Promise<Record<string, { count: number }>> {
+  const res = await api.get("/properties/type-counts");
+  return res.data;
+}
+
+export async function crearPropiedad(datos: DatosPropiedad): Promise<Propiedad> {
+  const res = await api.post<{ data: Propiedad }>("/properties", datos);
+  return res.data.data;
+}
+
+export async function actualizarPropiedad(
+  id: number,
+  datos: Partial<DatosPropiedad>
+): Promise<Propiedad> {
+  const res = await api.put<{ data: Propiedad }>(`/properties/${id}`, datos);
+  return res.data.data;
+}
+
+export async function eliminarPropiedad(id: number): Promise<void> {
+  await api.delete(`/properties/${id}`);
 }
 
 export interface DatosCierrePropiedad {
@@ -33,180 +166,61 @@ export interface DatosCierrePropiedad {
   note?: string;
 }
 
-// ─── Helpers internos ─────────────────────────────────────────────────────────
-
-const delay = () => new Promise(r => setTimeout(r, 300));
-
-async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem("token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err?.message ?? "Error en la petición");
-  }
-  return res.json();
-}
-
-function filtrarMock(props: Property[], filtros: FiltrosPropiedades): Property[] {
-  let r = [...props];
-  if (filtros.listingType && filtros.listingType !== "all")
-    r = r.filter(p => p.listingType === filtros.listingType);
-  if (filtros.type)
-    r = r.filter(p => p.type === filtros.type);
-  if (filtros.city && filtros.city !== "all")
-    r = r.filter(p => p.city.toLowerCase() === filtros.city!.toLowerCase());
-  if (filtros.minPrice) r = r.filter(p => p.price >= filtros.minPrice!);
-  if (filtros.maxPrice) r = r.filter(p => p.price <= filtros.maxPrice!);
-  if (filtros.bedrooms && filtros.bedrooms !== "any")
-    r = r.filter(p => filtros.bedrooms === "4+" ? p.bedrooms >= 4 : p.bedrooms === Number(filtros.bedrooms));
-  if (filtros.minArea) r = r.filter(p => p.area >= filtros.minArea!);
-  if (filtros.hasGarden) r = r.filter(p => p.hasGarden);
-  if (filtros.hasGarage) r = r.filter(p => p.hasGarage);
-  if (filtros.hasPool)   r = r.filter(p => p.hasPool);
-
-  const sort = filtros.sortBy ?? "newest";
-  if (sort === "price-asc")  r.sort((a, b) => a.price - b.price);
-  if (sort === "price-desc") r.sort((a, b) => b.price - a.price);
-  if (sort === "area-desc")  r.sort((a, b) => b.area - a.area);
-  if (sort === "newest")     r.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-  return r;
-}
-
-// ─── API pública ──────────────────────────────────────────────────────────────
-
-/** Obtiene una propiedad por ID */
-export async function obtenerPropiedad( id: number): Promise<Property> {
-  if (USAR_MOCK) {
-    await delay();
-    return listadoMock.data.find(p => p.id === id) ?? propiedadMock;
-  }
-  const res = await apiFetch<{ data: Property }>(`/propiedades/${id}`);
-  return res.data;
-}
-
-/** Listado paginado de propiedades activas con filtros */
-export async function obtenerPropiedades(
-  filtros: FiltrosPropiedades = {}
-): Promise<ListadoPropiedades> {
-  if (USAR_MOCK) {
-    await delay();
-    const activas = listadoMock.data.filter(p => p.status === "active");
-    const filtradas = filtrarMock(activas, filtros);
-    const perPage = 6;
-    const page = filtros.page ?? 1;
-    return {
-      data: filtradas.slice((page - 1) * perPage, page * perPage),
-      meta: {
-        pagina_actual: page,
-        total_paginas: Math.ceil(filtradas.length / perPage),
-        total: filtradas.length,
-        por_pagina: perPage,
-      },
-    };
-  }
-  const params = new URLSearchParams();
-  Object.entries(filtros).forEach(([k, v]) => {
-    if (v !== undefined && v !== null) params.set(k, String(v));
-  });
-  return apiFetch<ListadoPropiedades>(`/propiedades?${params}`);
-}
-
-/** Crea una nueva propiedad (FormData incluye fotos) */
-export async function crearPropiedad(formData: FormData): Promise<Property> {
-  if (USAR_MOCK) {
-    await delay();
-    return { ...propiedadMock, id: Date.now() };
-  }
-  const res = await apiFetch<{ data: Property }>("/propiedades", {
-    method: "POST",
-    body: formData,
-  });
-  return res.data;
-}
-
-/** Actualiza una propiedad existente */
-export async function actualizarPropiedad(id: number, formData: FormData): Promise<Property> {
-  if (USAR_MOCK) {
-    await delay();
-    return listadoMock.data.find(p => p.id === id) ?? propiedadMock;
-  }
-  formData.append("_method", "PUT"); // Laravel method spoofing
-  const res = await apiFetch<{ data: Property }>(`/propiedades/${id}`, {
-    method: "POST",
-    body: formData,
-  });
-  return res.data;
-}
-
-/** Cierra una propiedad */
 export async function cerrarPropiedad(
   id: number,
   datos: DatosCierrePropiedad
-): Promise<Property> {
-  if (USAR_MOCK) {
-    await delay();
-    const p = listadoMock.data.find(p => p.id === id) ?? propiedadMock;
-    return { ...p, status: "closed", closedReason: datos.reason };
-  }
-  const res = await apiFetch<{ data: Property }>(`/propiedades/${id}/cerrar`, {
-    method: "PATCH",
-    body: JSON.stringify(datos),
-  });
-  return res.data;
+): Promise<Propiedad> {
+  const reason = datos.note ? `${datos.reason}: ${datos.note}` : datos.reason;
+  const res = await api.post<{ data: Propiedad }>(`/properties/${id}/close`, { reason });
+  return res.data.data;
 }
 
-/** Propiedades del usuario autenticado */
 export async function obtenerMisPropiedades(
-  estado?: "active" | "closed"
+  filtros: { status?: string; q?: string; page?: number } = {}
 ): Promise<ListadoPropiedades> {
-  if (USAR_MOCK) {
-    await delay();
-    const mis = listadoMock.data.filter(p => p.ownerId === "u1");
-    const data = estado ? mis.filter(p => p.status === estado) : mis;
-    return {
-      data,
-      meta: { pagina_actual: 1, total_paginas: 1, total: data.length, por_pagina: 12 },
-    };
-  }
-  const params = estado ? `?estado=${estado}` : "";
-  return apiFetch<ListadoPropiedades>(`/mis-propiedades${params}`);
+  const params = new URLSearchParams();
+  Object.entries(filtros).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== "") params.set(k, String(v));
+  });
+  const res = await api.get<ListadoPropiedades>(`/my-properties?${params}`);
+  return res.data;
 }
 
-/** Sube fotos adicionales a una propiedad */
-export async function subirFotos(id: number, archivos: File[]): Promise<Property> {
-  if (USAR_MOCK) {
-    await delay();
-    return listadoMock.data.find(p => p.id === id) ?? propiedadMock;
-  }
+export async function subirImagenesPropiedad(
+  propiedadId: number,
+  archivos: File[]
+): Promise<PropiedadImagen[]> {
   const formData = new FormData();
-  archivos.forEach(f => formData.append("fotos[]", f));
-  const res = await apiFetch<{ data: Property }>(`/propiedades/${id}/fotos`, {
-    method: "POST",
-    body: formData,
+  archivos.forEach((f) => formData.append("images[]", f));
+  const res = await api.post<PropiedadImagen[]>(`/properties/${propiedadId}/images`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
   return res.data;
 }
 
-/** Elimina una foto por índice */
-export async function eliminarFoto(
-  propiedadId: string,
-  fotoId: number
-): Promise<{ message: string }> {
-  if (USAR_MOCK) {
-    await delay();
-    return { message: "Foto eliminada correctamente." };
-  }
-  return apiFetch<{ message: string }>(
-    `/propiedades/${propiedadId}/fotos/${fotoId}`,
-    { method: "DELETE" }
+export async function eliminarImagenPropiedad(
+  propiedadId: number,
+  imagenId: number
+): Promise<void> {
+  await api.delete(`/properties/${propiedadId}/images/${imagenId}`);
+}
+
+export async function setMainImage(
+  propiedadId: number,
+  imagenId: number
+): Promise<PropiedadImagen> {
+  const res = await api.put<PropiedadImagen>(
+    `/properties/${propiedadId}/images/${imagenId}/set-main`
   );
+  return res.data;
+}
+
+export async function toggleFavorito(propiedadId: number): Promise<{ favorited: boolean }> {
+  const res = await api.post<{ favorited: boolean }>(`/properties/${propiedadId}/favorite`);
+  return res.data;
+}
+
+export async function obtenerFavoritos(): Promise<ListadoPropiedades> {
+  const res = await api.get<ListadoPropiedades>("/favorites");
+  return res.data;
 }

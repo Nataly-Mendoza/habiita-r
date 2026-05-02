@@ -1,22 +1,21 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { describe, it, expect, vi } from "vitest";
 import { RutaProtegida } from "../components/RutaProtegida";
-import {
-  ContextoAutenticacion,
-  ContextoAutenticacionType,
-} from "../context/ContextoAutenticacion";
+import type { ContextoAutenticacionType } from "../context/ContextoAutenticacion";
+import { ContextoAutenticacion } from "../context/ContextoAutenticacion";
 
 describe("RutaProtegida", () => {
   const usuarioMock = {
     id: 1,
     nombre: "Juan",
     apellido: "Pérez",
-    correo: "user@habitta.mx",
-    rol: { id: 2, nombre: "propietario", descripcion: "" },
+    full_name: "Juan Pérez",
+    email: "user@habitta.mx",
+    telefono: null as null,
+    foto_perfil: null as null,
     notificaciones: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    roles: ["propietario"],
   };
 
   const renderizar = (contexto: ContextoAutenticacionType) => {
@@ -46,7 +45,6 @@ describe("RutaProtegida", () => {
     };
 
     renderizar(contexto);
-
     expect(screen.getByText(/cargando/i)).toBeInTheDocument();
   });
 
@@ -98,7 +96,6 @@ describe("RutaProtegida", () => {
     };
 
     const { container } = renderizar(contexto);
-
     const spinner = container.querySelector(".animate-spin");
     expect(spinner).toBeInTheDocument();
   });

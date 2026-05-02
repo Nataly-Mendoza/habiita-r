@@ -1,171 +1,140 @@
 import { useState, useEffect, useRef } from "react";
 import { useChat } from "../../hooks/useChat";
 import { useAutenticacion } from "../../hooks/useAutenticacion";
-import { ListaChats } from "./ListaChats";
-import { BurbujaMensaje } from "./BurbujaMensaje";
-import { IndicadorEscribiendo } from "./IndicadorEscribiendo";
+import type { Conversacion } from "../../services/chat";
 
 export const ConversacionChat = () => {
-  const { estado, abrirConversacion, enviar, marcarLeido } = useChat();
+  const { estado, abrirConversacion, enviar } = useChat();
   const { usuario } = useAutenticacion();
 
   const [conversacionActiva, setConversacionActiva] = useState<number | null>(null);
   const [mensajeInput, setMensajeInput] = useState("");
   const [escribiendo, setEscribiendo] = useState(false);
-
   const mensajesRef = useRef<HTMLDivElement>(null);
-  const intervalRef = useRef<number | null>(null);
 
-  // Scroll automático al final cuando cambian los mensajes
   useEffect(() => {
     if (mensajesRef.current) {
       mensajesRef.current.scrollTop = mensajesRef.current.scrollHeight;
     }
   }, [estado.mensajesActivos]);
 
-  // Polling cada 5 segundos para conversación activa
   useEffect(() => {
-    if (conversacionActiva) {
-      intervalRef.current = setInterval(async () => {
-        await abrirConversacion(conversacionActiva);
-      }, 5000);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
+    if (!conversacionActiva) return;
+    const id = setInterval(() => abrirConversacion(conversacionActiva), 5000);
+    return () => clearInterval(id);
   }, [conversacionActiva, abrirConversacion]);
 
-  const seleccionarConversacion = async (id: number) => {
+  const seleccionar = async (id: number) => {
     setConversacionActiva(id);
     await abrirConversacion(id);
-    await marcarLeido(id);
   };
 
   const enviarMensaje = async () => {
     if (!mensajeInput.trim() || !conversacionActiva) return;
-
     const contenido = mensajeInput.trim();
     setMensajeInput("");
-
-    // Mostrar indicador de escribiendo brevemente
     setEscribiendo(true);
     setTimeout(() => setEscribiendo(false), 1000);
-
     await enviar(conversacionActiva, contenido);
   };
 
-  const manejarKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      enviarMensaje();
-    }
-  };
-
-  const conversacionActual = estado.conversaciones.find(
+  const conversacionActual: Conversacion | undefined = estado.conversaciones.find(
     (c) => c.id === conversacionActiva
   );
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Panel de lista de chats - Desktop */}
-      <div className="hidden w-80 md:block">
-        <ListaChats
-          conversaciones={estado.conversaciones}
-          onSeleccionar={seleccionarConversacion}
-        />
+      {/* Lista */}
+      <div className="hidden w-80 md:flex md:flex-col border-r bg-white">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">Mensajes</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {estado.conversaciones.map((conv) => (
+            <button
+              key={conv.id}
+              onClick={() => seleccionar(conv.id)}
+              className={`w-full text-left p-4 hover:bg-gray-50 border-b ${conversacionActiva === conv.id ? "bg-blue-50" : ""}`}
+            >
+              <p className="font-medium text-sm text-gray-900 truncate">
+                {conv.property?.title ?? "Propiedad"}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {conv.last_message?.content ?? "Sin mensajes"}
+              </p>
+              {conv.unread_count > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
+                  {conv.unread_count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Panel de conversación */}
+      {/* Conversación */}
       <div className="flex flex-1 flex-col">
         {conversacionActual ? (
           <>
-            {/* Header de conversación */}
             <div className="flex items-center gap-3 border-b bg-white p-4">
-              {/* Botón volver en mobile */}
-              <button
-                onClick={() => setConversacionActiva(null)}
-                className="md:hidden text-gray-600 hover:text-gray-900"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
               <img
-                src={conversacionActual.propiedad.foto_principal_url}
-                alt={conversacionActual.propiedad.titulo}
-                className="h-10 w-10 rounded-full object-cover"
+                src={conversacionActual.property?.main_image ?? ""}
+                alt={conversacionActual.property?.title ?? ""}
+                className="h-10 w-10 rounded-full object-cover bg-gray-100"
               />
-              <div className="flex-1">
+              <div>
                 <h3 className="font-medium text-gray-900">
-                  {conversacionActual.usuario_propietario.nombre}
+                  {conversacionActual.owner?.nombre ?? "Propietario"}
                 </h3>
-                <p className="text-sm text-gray-600">
-                  {conversacionActual.propiedad.titulo}
+                <p className="text-sm text-gray-500">
+                  {conversacionActual.property?.title ?? ""}
                 </p>
               </div>
             </div>
 
-            {/* Área de mensajes */}
-            <div
-              ref={mensajesRef}
-              className="flex-1 overflow-y-auto p-4 space-y-2"
-            >
-              {estado.mensajesActivos.map((mensaje) => (
-                <BurbujaMensaje
-                  key={mensaje.id}
-                  mensaje={mensaje}
-                  esMio={mensaje.usuario.id === usuario.id}
-                />
-              ))}
-
+            <div ref={mensajesRef} className="flex-1 overflow-y-auto p-4 space-y-2">
+              {estado.mensajesActivos.map((msg) => {
+                const esMio = msg.sender_id === usuario?.id;
+                return (
+                  <div key={msg.id} className={`flex ${esMio ? "justify-end" : "justify-start"}`}>
+                    <div className={`rounded-xl px-4 py-2 max-w-xs text-sm ${esMio ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"}`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                );
+              })}
               {escribiendo && (
                 <div className="flex justify-start">
-                  <IndicadorEscribiendo />
+                  <div className="bg-gray-100 rounded-xl px-4 py-2">
+                    <span className="text-gray-400 text-xs">Escribiendo...</span>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Input de mensaje */}
-            <div className="border-t bg-white p-4">
-              <div className="flex gap-2">
-                <textarea
-                  value={mensajeInput}
-                  onChange={(e) => setMensajeInput(e.target.value)}
-                  onKeyPress={manejarKeyPress}
-                  placeholder="Escribe un mensaje..."
-                  className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  rows={1}
-                />
-                <button
-                  onClick={enviarMensaje}
-                  disabled={!mensajeInput.trim() || estado.cargando}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                </button>
-              </div>
+            <div className="border-t bg-white p-4 flex gap-2">
+              <textarea
+                value={mensajeInput}
+                onChange={(e) => setMensajeInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviarMensaje(); } }}
+                placeholder="Escribe un mensaje..."
+                className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none"
+                rows={1}
+              />
+              <button
+                onClick={enviarMensaje}
+                disabled={!mensajeInput.trim()}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
             </div>
           </>
         ) : (
-          /* Estado vacío */
-          <div className="flex flex-1 items-center justify-center bg-white">
-            <div className="text-center">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
-                Selecciona una conversación
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Elige una conversación para comenzar a chatear
-              </p>
-            </div>
+          <div className="flex flex-1 items-center justify-center text-center text-gray-400">
+            <p className="text-sm">Selecciona una conversación para comenzar</p>
           </div>
         )}
       </div>
