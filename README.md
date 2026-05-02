@@ -1,52 +1,102 @@
-# 🏠 Habitta - Sistema de Autenticación React
+# Habitta — React Frontend
 
-> Proyecto React + TypeScript con autenticación completa, roles y permisos, testing avanzado.
+Frontend para plataforma de propiedades. Interfaz con autenticacion, gestión de propiedades, chat e integración con IA.
 
-## 📊 Estado del Proyecto - Rev3, Rev4, Rev5 ✅ COMPLETADAS
+## Requisitos del Sistema
 
-| Revisión | Requisito | Estado |
-|----------|-----------|--------|
-| **Rev3** | 6+ Tests API | ✅ **11 tests** |
-| **Rev4** | Login/Registro + Roles | ✅ Completo |
-| **Rev5** | 6+ Componentes | ✅ 6+ componentes |
+- Node.js >= 16 (se recomienda 18 o superior)
+- npm (incluido con Node.js)
 
----
+## Instalacion Local
 
-## 🎯 Características Principales
+Clonar repositorio y cambiar a rama de testing:
 
-### ✅ Autenticación Completa
-- **Login** con validación Zod
-- **Registro** con selección de rol (comprador/propietario)
-- **Persistencia** de sesión en localStorage
-- **Logout** funcional con limpieza de datos
-- **Protección de rutas** automática
-
-### ✅ Sistema de Roles y Permisos
-```
-PROPIETARIO     → Crear, editar, eliminar propiedades
-COMPRADOR       → Ver propiedades, contactar, favoritos  
-ADMIN           → Acceso total al sistema
+```bash
+cd habitta-react
+git checkout revision7/testing-baseline
 ```
 
-### ✅ Páginas Implementadas
-1. 🏠 **Inicio** - Landing page con propiedades destacadas
-2. 🏘️ **Catálogo** - Búsqueda avanzada con filtros y paginación
-3. 📊 **Dashboard** - Panel de usuario personalizado por rol
-4. 🔐 **Login** - Autenticación con validación
-5. ✍️ **Registro** - Creación de cuenta con Zod schemas
-6. 🛡️ **Rutas Protegidas** - Por autenticación y por rol
+Instalar dependencias:
 
-### ✅ Testing (11 Tests)
+```bash
+npm install
 ```
-✓ Login.test.tsx               - Validación de login
-✓ RutaProtegida.test.tsx       - Protección de rutas
-✓ Dashboard.test.tsx           - Panel de usuario
-✓ HomePage.test.tsx            - Página de inicio
-✓ Catalogo.test.tsx            - Catálogo de propiedades
-✓ ContextoAutenticacion.test.tsx - Contexto de autenticación
-✓ RutaPorRol.test.tsx          - Protección por roles
-✓ + 4 tests de componentes UI
+
+## Iniciar Servidor de Desarrollo
+
+```bash
+npm run dev
 ```
+
+Accesible en: http://localhost:5173
+
+El servidor espera que el backend este disponible en: http://127.0.0.1:8000/api
+
+## Configuracion
+
+El archivo .env debe contener:
+
+```env
+VITE_API_URL=http://localhost:8000/api
+VITE_USAR_MOCK=false
+```
+
+Si VITE_API_URL no esta configurado correctamente, la aplicacion no podra conectarse al backend.
+
+## Usuarios de Prueba
+
+| Email | Contraseña | Rol |
+|---|---|---|
+| admin@habitta.mx | Admin123! | admin |
+| prop@habitta.mx | Prop123! | propietario |
+| user@habitta.mx | User123! | visitante_registrado |
+
+## Caracteres del Proyecto
+
+- React 19 + TypeScript
+- Vite 8 para desarrollo y construccion rapida
+- React Router 7 para navegacion
+- React Hook Form + Zod para validacion de formularios
+- Tailwind CSS para estilos
+- Axios para comunicacion con API
+
+## Rutas Protegidas
+
+- `/login` - Autenticacion
+- `/registro` - Creacion de cuenta
+- `/catalogo` - Listado de propiedades (publico)
+- `/dashboard` - Panel segun rol (protegido)
+- `/dashboard/propiedades` - Gestión de propiedades (propietario)
+- `/dashboard/admin` - Panel administrativo (admin)
+- `/dashboard/chats` - Mensajeria (registrado)
+
+## Pruebas
+
+Ejecutar suite de tests:
+
+```bash
+npm run test:run
+```
+
+Ver tests interactivo:
+
+```bash
+npm run test:ui
+```
+
+Lint del codigo:
+
+```bash
+npm run lint
+```
+
+## Compilacion para Produccion
+
+```bash
+npm run build
+```
+
+Se genera carpeta `dist/` lista para deploy.
 
 ---
 
