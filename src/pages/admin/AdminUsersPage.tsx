@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { obtenerUsuariosAdmin, actualizarRolUsuario, type AdminUser } from "../../services/admin";
+import { useAutenticacion } from "../../hooks/useAutenticacion";
 
 const ROLES = ["admin", "propietario", "visitante_registrado"] as const;
 
@@ -20,6 +21,7 @@ function RolBadge({ rol }: { rol: string | undefined }) {
 }
 
 export function AdminUsersPage() {
+  const { usuario, refrescarPerfil } = useAutenticacion();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [cargando, setCargando] = useState(true);
   const [roles, setRoles] = useState<Record<number, string>>({});
@@ -46,6 +48,10 @@ export function AdminUsersPage() {
       setUsers((prev) =>
         prev.map((u) => (u.id === id ? { ...u, roles: [roles[id]] } : u))
       );
+      // If admin changed their own role, refresh auth context immediately
+      if (usuario?.id === id) {
+        await refrescarPerfil();
+      }
       setExito("Rol actualizado correctamente.");
       setTimeout(() => setExito(null), 3000);
     } finally {
