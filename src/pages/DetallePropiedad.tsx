@@ -150,8 +150,8 @@ export function DetallePropiedad() {
                 className="w-full h-full object-cover"
               />
 
-              {/* AI Button — visible for all interior property types when logged in */}
-              {token && propiedad.type !== "land" && imagenesUrl.length > 0 && (
+              {/* AI Button — visible for all property types when logged in */}
+              {token && imagenesUrl.length > 0 && (
                 <button
                   onClick={() => ejecutarIA(imagenesUrl[imagenActiva])}
                   disabled={iaGenerando}
@@ -163,7 +163,7 @@ export function DetallePropiedad() {
               )}
 
               {/* Prompt unauthenticated users */}
-              {!token && propiedad.type !== "land" && imagenesUrl.length > 0 && (
+              {!token && imagenesUrl.length > 0 && (
                 <button
                   onClick={() => navigate("/login")}
                   className="absolute bottom-4 right-4 backdrop-blur px-4 py-2 rounded-xl text-sm font-semibold shadow-lg transition flex items-center gap-2"
