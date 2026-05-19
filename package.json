@@ -3,6 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -10,7 +15,10 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "audit": "pnpm audit --audit-level=high",
+    "audit:fix": "pnpm audit --fix",
+    "security:check": "pnpm audit --audit-level=high --reporter=json > audit-report.json || true"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
