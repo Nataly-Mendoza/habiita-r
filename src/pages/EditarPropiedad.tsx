@@ -15,6 +15,12 @@ import {
 } from "../services/propiedades";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 
+const optNum = (schema: z.ZodNumber) =>
+  z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : Number(v)),
+    schema.optional()
+  );
+
 const esquema = z.object({
   title: z.string().min(10, "Mínimo 10 caracteres"),
   description: z.string().optional(),
@@ -25,10 +31,10 @@ const esquema = z.object({
   city: z.string().min(2, "Ciudad requerida"),
   state: z.string().optional(),
   area: z.coerce.number().min(1, "Área requerida"),
-  bedrooms: z.coerce.number().min(0).optional(),
-  bathrooms: z.coerce.number().min(0).optional(),
-  floor: z.coerce.number().min(0).optional(),
-  year_built: z.coerce.number().min(1900).max(2026).optional(),
+  bedrooms:   optNum(z.number().min(0)),
+  bathrooms:  optNum(z.number().min(0)),
+  floor:      optNum(z.number().min(0)),
+  year_built: optNum(z.number().min(1900).max(2026)),
   has_water: z.boolean().default(false),
   has_electricity: z.boolean().default(false),
   has_drainage: z.boolean().default(false),

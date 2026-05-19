@@ -103,7 +103,7 @@ export function DetallePropiedad() {
       const result = await amoblarConIA(imageUrl);
       setIaGenerada(result.generated);
     } catch (e: any) {
-      const msg: string = e.response?.data?.message ?? e.message ?? "Error desconocido";
+      const msg: string = e.response?.data?.error ?? e.response?.data?.message ?? e.message ?? "Error desconocido";
       const retry: boolean = e.response?.data?.retry ?? false;
       setIaError(msg);
       setIaCanRetry(retry || e.response?.status !== 422);
