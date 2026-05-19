@@ -21,8 +21,9 @@ export function PropertyCard({ property, variant = "grid" }: PropertyCardProps) 
   const { favoritedIds, toggleFavorito } = useContext(ContextoFavoritos);
   const liked = favoritedIds.has(property.id);
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
-  const imgSrc = property.main_image ?? FALLBACK_IMG;
+  const imgSrc = (!imgError && property.main_image) ? property.main_image : FALLBACK_IMG;
   const location = [property.city, property.state].filter(Boolean).join(", ");
   const isRent = property.listing_type === "rent";
 
@@ -47,6 +48,7 @@ export function PropertyCard({ property, variant = "grid" }: PropertyCardProps) 
             <img
               src={imgSrc}
               alt={property.title}
+              onError={() => setImgError(true)}
               className="w-full h-full object-cover transition-transform duration-500"
               style={{ transform: hovered ? "scale(1.04)" : "scale(1)" }}
             />

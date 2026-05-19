@@ -16,6 +16,11 @@ import { Navbar } from "../components/layout/Navbar";
 import { Footer } from "../components/layout/Footer";
 import { ModalIA } from "../components/chat/ModalIA";
 
+const FALLBACK_IMG = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80";
+const handleImgError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  (e.target as HTMLImageElement).src = FALLBACK_IMG;
+};
+
 const TIPO_LABEL: Record<string, string> = {
   house: "Casa", apartment: "Departamento", land: "Terreno",
   studio: "Estudio", commercial: "Local Comercial", office: "Oficina",
@@ -138,19 +143,12 @@ export function DetallePropiedad() {
           <div className="lg:col-span-2 space-y-6">
             {/* Gallery */}
             <div className="relative rounded-2xl overflow-hidden bg-gray-200 aspect-video">
-              {imagenesUrl.length > 0 ? (
-                <img
-                  src={imagenesUrl[imagenActiva]}
-                  alt={propiedad.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <img
-                  src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1400&q=80"
-                  alt={propiedad.title}
-                  className="w-full h-full object-cover"
-                />
-              )}
+              <img
+                src={imagenesUrl[imagenActiva] ?? FALLBACK_IMG}
+                alt={propiedad.title}
+                onError={handleImgError}
+                className="w-full h-full object-cover"
+              />
 
               {/* AI Button — visible for all interior property types when logged in */}
               {token && propiedad.type !== "land" && imagenesUrl.length > 0 && (
@@ -186,7 +184,7 @@ export function DetallePropiedad() {
                         i === imagenActiva ? "border-white" : "border-transparent opacity-70"
                       }`}
                     >
-                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <img src={url} alt="" onError={handleImgError} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -313,8 +311,9 @@ export function DetallePropiedad() {
                       style={{ background: "white", border: "1px solid rgba(27,43,94,0.08)" }}
                     >
                       <img
-                        src={sim.main_image ?? "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400"}
+                        src={sim.main_image ?? FALLBACK_IMG}
                         alt={sim.title}
+                        onError={handleImgError}
                         className="w-full h-40 object-cover"
                       />
                       <div className="p-4">
