@@ -37,3 +37,7 @@ export async function obtenerPropiedadesAdmin(): Promise<AdminProperty[]> {
   const res = await api.get("/admin/properties");
   return res.data.data;
 }
+
+export async function eliminarPropiedadesAdmin(ids: number[]): Promise<void> {
+  await api.post("/admin/properties/bulk-delete", { ids });
+}
