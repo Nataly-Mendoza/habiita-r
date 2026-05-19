@@ -289,7 +289,8 @@ export function CrearPropiedad() {
               </p>
 
               {/* Drop zone */}
-              <label
+              <div
+                onClick={() => fileInputRef.current?.click()}
                 className="flex flex-col items-center justify-center w-full rounded-xl cursor-pointer transition hover:opacity-90 mb-4"
                 style={{ border: "2px dashed rgba(27,43,94,0.2)", background: "#F8F9FF", padding: "28px 16px" }}
               >
@@ -298,15 +299,16 @@ export function CrearPropiedad() {
                 </svg>
                 <p className="text-sm font-semibold" style={{ color: "#1B2B5E" }}>Seleccionar fotos</p>
                 <p className="text-xs mt-1" style={{ color: "#8A92B2" }}>o arrastra y suelta aquí</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => handleArchivos(e.target.files)}
-                />
-              </label>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => { handleArchivos(e.target.files); e.currentTarget.value = ''; }}
+              />
 
               {imagenes.length === 0 && (
                 <p className="text-center text-sm py-2" style={{ color: "#E06B6B" }}>
