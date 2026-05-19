@@ -117,13 +117,16 @@ export function EditarPropiedad() {
       .finally(() => setCargando(false));
   }, [id]);
 
-  const handleArchivos = (files: FileList | null) => {
-    if (!files) return;
-    const nuevas: NuevaImagen[] = Array.from(files).slice(0, 20 - imagenes.length - nuevasImagenes.length).map((f) => ({
-      file: f,
-      preview: URL.createObjectURL(f),
-    }));
-    setNuevasImagenes((prev) => [...prev, ...nuevas]);
+  const handleArchivos = (files: File[]) => {
+    if (files.length === 0) return;
+    setNuevasImagenes((prev) => {
+      const limit = Math.max(0, 20 - imagenes.length - prev.length);
+      const nuevas = files.slice(0, limit).map((f) => ({
+        file: f,
+        preview: URL.createObjectURL(f),
+      }));
+      return [...prev, ...nuevas];
+    });
   };
 
   const eliminarExistente = async (imgId: number) => {
@@ -345,8 +348,7 @@ export function EditarPropiedad() {
             <h2 className="font-semibold mb-1" style={{ color: "#1B2B5E" }}>Agregar imágenes</h2>
             <p className="text-sm mb-4" style={{ color: "#8A92B2" }}>Sube nuevas fotos para esta propiedad. JPG, PNG, WEBP · máx. 5 MB c/u.</p>
 
-            <div
-              onClick={() => fileInputRef.current?.click()}
+            <label
               className="flex flex-col items-center justify-center w-full rounded-xl cursor-pointer transition hover:opacity-90 mb-4"
               style={{ border: "2px dashed rgba(27,43,94,0.2)", background: "#F8F9FF", padding: "24px 16px" }}
             >
@@ -354,16 +356,19 @@ export function EditarPropiedad() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
               <p className="text-sm font-semibold" style={{ color: "#1B2B5E" }}>Seleccionar fotos</p>
-            </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => { handleArchivos(e.target.files); e.currentTarget.value = ''; }}
-            />
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files ?? []);
+                  e.currentTarget.value = '';
+                  handleArchivos(files);
+                }}
+              />
+            </label>
 
             {nuevasImagenes.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">

@@ -192,10 +192,12 @@ export async function subirImagenesPropiedad(
 ): Promise<PropiedadImagen[]> {
   const formData = new FormData();
   archivos.forEach((f) => formData.append("images[]", f));
-  const res = await api.post<PropiedadImagen[]>(`/properties/${propiedadId}/images`, formData, {
+  const res = await api.post(`/properties/${propiedadId}/images`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-  return res.data;
+  // Laravel ResourceCollection wraps in {data:[...]}, plain json returns []
+  const raw = res.data;
+  return Array.isArray(raw) ? raw : (raw?.data ?? []);
 }
 
 export async function eliminarImagenPropiedad(

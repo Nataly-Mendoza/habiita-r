@@ -84,21 +84,14 @@ export function CrearPropiedad() {
     if (valido) setPaso((p) => p + 1);
   };
 
-  const handleArchivos = (files: FileList | null) => {
-    if (!files) return;
-    const nuevas: ImagenPreview[] = [];
-    Array.from(files).slice(0, 20 - imagenes.length).forEach((file) => {
-      nuevas.push({
-        file,
-        preview: URL.createObjectURL(file),
-        esMain: false,
-      });
-    });
+  const handleArchivos = (files: File[]) => {
+    if (files.length === 0) return;
     setImagenes((prev) => {
+      const nuevas = files
+        .slice(0, Math.max(0, 20 - prev.length))
+        .map((file) => ({ file, preview: URL.createObjectURL(file), esMain: false }));
       const combined = [...prev, ...nuevas];
-      if (!combined.some((i) => i.esMain) && combined.length > 0) {
-        combined[0].esMain = true;
-      }
+      if (!combined.some((i) => i.esMain) && combined.length > 0) combined[0].esMain = true;
       return combined;
     });
   };
@@ -289,8 +282,7 @@ export function CrearPropiedad() {
               </p>
 
               {/* Drop zone */}
-              <div
-                onClick={() => fileInputRef.current?.click()}
+              <label
                 className="flex flex-col items-center justify-center w-full rounded-xl cursor-pointer transition hover:opacity-90 mb-4"
                 style={{ border: "2px dashed rgba(27,43,94,0.2)", background: "#F8F9FF", padding: "28px 16px" }}
               >
@@ -299,16 +291,19 @@ export function CrearPropiedad() {
                 </svg>
                 <p className="text-sm font-semibold" style={{ color: "#1B2B5E" }}>Seleccionar fotos</p>
                 <p className="text-xs mt-1" style={{ color: "#8A92B2" }}>o arrastra y suelta aquí</p>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => { handleArchivos(e.target.files); e.currentTarget.value = ''; }}
-              />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    e.currentTarget.value = '';
+                    handleArchivos(files);
+                  }}
+                />
+              </label>
 
               {imagenes.length === 0 && (
                 <p className="text-center text-sm py-2" style={{ color: "#E06B6B" }}>
