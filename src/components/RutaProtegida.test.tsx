@@ -42,6 +42,7 @@ describe("RutaProtegida", () => {
       guardarSesion: vi.fn(),
       cerrarSesion: vi.fn(),
       limpiarError: vi.fn(),
+      refrescarPerfil: vi.fn(),
     };
 
     renderizar(contexto);
@@ -57,6 +58,7 @@ describe("RutaProtegida", () => {
       guardarSesion: vi.fn(),
       cerrarSesion: vi.fn(),
       limpiarError: vi.fn(),
+      refrescarPerfil: vi.fn(),
     };
 
     renderizar(contexto);
@@ -75,6 +77,7 @@ describe("RutaProtegida", () => {
       guardarSesion: vi.fn(),
       cerrarSesion: vi.fn(),
       limpiarError: vi.fn(),
+      refrescarPerfil: vi.fn(),
     };
 
     renderizar(contexto);
@@ -93,6 +96,7 @@ describe("RutaProtegida", () => {
       guardarSesion: vi.fn(),
       cerrarSesion: vi.fn(),
       limpiarError: vi.fn(),
+      refrescarPerfil: vi.fn(),
     };
 
     const { container } = renderizar(contexto);
